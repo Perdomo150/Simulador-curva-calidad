@@ -1,19 +1,90 @@
 ---
-import CalidadVertimiento from './components/CalidadVertimiento';
+import CalidadVertimiento from "./components/CalidadVertimiento.tsx";
+import SimuladorGenericoSSD from "./components/SimuladorGenericoSSD.tsx";
+const TABS = [
+  { id: "calidad", label: "Curva de Calidad (Res. 631/2015)" },
+  { id: "ssd",     label: "Simulador Genérico (Eventos Discretos)" },
+];
 ---
-
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <title>Simulador – Curvas de Calidad de Vertimiento</title>
+    <title>Simulación & Curva de Calidad</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-  </head>
+    <style>
+      :root { --bd:#DCEAF7; --chip:#EAF7FE; --ink:#0F172A; --sub:#475569; }
+      body {
+        margin:0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
+        background: linear-gradient(180deg, rgba(224,242,254,.35) 0%, #fff 60%);
+      }
+      .wrap { display:grid; gap:16px; padding:16px; }
+      .header { border:1px solid var(--bd); border-radius:14px; background:#fff; padding:14px; }
+      h1 { margin:0; font-size:22px; font-weight:800; color:var(--ink); }
+      p.lead { margin:6px 0 0 0; color:var(--sub); }
 
-  <body style="font-family: system-ui, sans-serif; padding: 24px; max-width: 1200px; margin: 0 auto;">
-    <h1 style="margin-bottom: 8px;">Simulador de Curva de Calidad</h1>
-    <p style="margin-top: 0; color: #555;">
-      Ingresa valores de Entrada (E) y Salida (S), calcula Razón (R=S/E), Porcentaje (RP=%) y evaluación.
-    </p>
-    <CalidadVertimiento client:load />
+      .tabs {
+        display:flex; gap:8px; flex-wrap:wrap;
+        background:#fff; border:1px solid var(--bd);
+        border-radius:12px; padding:6px; position:sticky; top:0; z-index:10;
+      }
+      .tab {
+        border:1px solid var(--bd); background:#fff;
+        padding:8px 12px; border-radius:999px;
+        font-weight:700; cursor:pointer; color:var(--ink);
+      }
+      .tab.active { background: var(--chip); color:#1E3A8A; }
+
+      .panel { display:none; }
+      .panel.show { display:block; }
+
+      .card { border:1px solid var(--bd); border-radius:14px; background:#fff; padding:12px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="header">
+        <h1>Simulación & Calidad de Vertimientos</h1>
+        <p class="lead">Cambia entre el simulador normativo y el simulador genérico de colas.</p>
+      </header>
+
+      <nav class="tabs" id="tabs">
+        {TABS.map((t) => (
+          <button class="tab" data-tab={t.id}>{t.label}</button>
+        ))}
+      </nav>
+
+      <section id="panel-calidad" class="panel">
+        <div class="card">
+          <CalidadVertimiento client:load />
+        </div>
+      </section>
+
+      <section id="panel-ssd" class="panel">
+        <div class="card">
+          <SimuladorGenericoSSD client:load />
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        const qs = (s) => document.querySelector(s);
+        const qsa = (s) => Array.from(document.querySelectorAll(s));
+        const tabs = qsa(".tab");
+        const panels = {
+          calidad: qs("#panel-calidad"),
+          ssd: qs("#panel-ssd"),
+        };
+        function show(id) {
+          tabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === id));
+          Object.entries(panels).forEach(([k, el]) => el.classList.toggle("show", k === id));
+          try { history.replaceState(null, "", "#" + id); } catch {}
+        }
+        tabs.forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
+        const hash = (location.hash || "").replace("#", "");
+        show(hash === "ssd" || hash === "calidad" ? hash : "calidad"); // por defecto: calidad
+      })();
+    </script>
   </body>
 </html>
